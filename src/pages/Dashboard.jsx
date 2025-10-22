@@ -12,6 +12,7 @@ const Dashboard = () => {
   const [section, setSection] = useState("personal"); // personal | shared | assigned
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showEditModal, setShowEditModal] = useState(false);
   // Pagination (pour plus de confort visuel)
   const [page, setPage] = useState(1);
   const itemsPerPage = 8;
@@ -63,6 +64,7 @@ useEffect(() => {
       if (editingTask) {
         await api.put(`/tasks/${editingTask._id}`, taskData);
         setEditingTask(null);
+        setShowEditModal(false);
       } else {
         await api.post("/tasks", taskData);
       }
@@ -170,12 +172,12 @@ useEffect(() => {
         >
           <div className="card-body p-3">
             <h5 className="card-title mb-3" style={{ color: "#0d6efd" }}>
-              {editingTask ? "Modifier la tâche" : "Ajouter une tâche"}
+              Ajouter une tâche
             </h5>
             <TaskForm
               onSubmit={handleSubmit}
-              initialData={editingTask}
-              onCancel={() => setEditingTask(null)}
+              initialData={null}
+              onCancel={() => {}}
             />
           </div>
         </div>
@@ -212,7 +214,7 @@ useEffect(() => {
               <TaskList
                 tasks={visibleTasks}
                 onToggleComplete={toggleComplete}
-                onEdit={setEditingTask}
+                onEdit={(t) => { setEditingTask(t); setShowEditModal(true); }}
                 onDelete={handleDelete}
                 currentUserId={user?.id || user?._id}
               />
@@ -319,6 +321,25 @@ useEffect(() => {
           </>
         )}
       </div>
+      {showEditModal && editingTask && (
+        <div className="modal" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <div className="modal-dialog modal-lg">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Modifier la tâche</h5>
+                <button type="button" className="btn-close" onClick={() => { setShowEditModal(false); setEditingTask(null); }}></button>
+              </div>
+              <div className="modal-body">
+                <TaskForm
+                  onSubmit={handleSubmit}
+                  initialData={editingTask}
+                  onCancel={() => { setShowEditModal(false); setEditingTask(null); }}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </Layout>
   );
 };

@@ -1,0 +1,87 @@
+.sidebar {
+  position: relative;
+  height: auto;
+  width: 260px;
+  background: linear-gradient(135deg, #b1d9f5 75%, #16db93 100%);
+  color: #f4faff;
+  box-shadow: 2px 0 16px rgba(22, 219, 147, 0.1);
+  border-top-right-radius: 18px;
+  border-bottom-right-radius: 18px;
+  box-sizing: border-box;
+  padding-left: 20px;
+  padding-right: 20px;
+  flex: 0 0 260px; /* fixed width in flex row */
+  align-self: stretch; /* take full height of middle row between header and footer */
+  overflow-y: auto; /* avoid overflowing past footer */
+  border-right: 1px solid rgba(0,0,0,0.06); /* subtle separator */
+}
+
+.sidebar .content {
+  padding: 28px 20px 18px 20px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem; /* réduit l'espacement vertical global */
+}
+
+.sidebar .avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 1rem;
+  border: 3px solid #16db93;
+  box-shadow: 0 2px 12px rgba(22, 219, 147, 0.18);
+  background: #fff;
+}
+
+.sidebar .username {
+  font-weight: 700;
+  font-size: 1.15rem;
+  margin-bottom: 0.5rem;
+  color: #f4faff;
+  letter-spacing: 0.5px;
+  text-align: center;
+}
+
+.sidebar .logout-btn {
+  margin-top: 0; /* ne pas pousser en bas, on gère l'ordre avec les dividers */
+  width: 100%;
+  background: linear-gradient(90deg, #ffb347 60%, #ff5858 100%);
+  border: none;
+  color: #fff;
+  font-weight: 600;
+  border-radius: 10px;
+  padding: 10px 0; /* compacter légèrement */
+  transition: background 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 8px rgba(255, 184, 71, 0.1);
+  letter-spacing: 0.5px;
+  cursor: pointer;
+}
+
+.sidebar .logout-btn:hover {
+  background: linear-gradient(90deg, #ff5858 60%, #f3d09f 100%);
+  box-shadow: 0 4px 16px rgba(255, 88, 88, 0.18);
+}
+
+.sidebar .divider {
+  height: 1px;
+  width: 100%;
+  background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.55) 12%, rgba(255,255,255,0.75) 50%, rgba(255,255,255,0.55) 88%, rgba(255,255,255,0) 100%);
+  margin: 8px 0; /* marges réduites */
+  opacity: 0.9;
+}
+
+/* Responsive widths */
+@media (max-width: 992px) {
+  .sidebar { flex: 0 0 220px; width: 220px; }
+}
+
+@media (max-width: 768px) {
+  .sidebar { flex: 0 0 200px; width: 200px; }
+}
+
+/* On very small screens, hide the sidebar to prioritize content. */
+@media (max-width: 576px) {
+  .sidebar { display: none; }
+}

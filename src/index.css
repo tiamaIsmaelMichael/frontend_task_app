@@ -1,0 +1,229 @@
+:root {
+  --title-font: 'Bellota', cursive;
+  --body-font: 'Bellota Text', cursive;
+}
+
+/* Thèmes via CSS variables */
+body[data-theme='light'] {
+  --bg: #ffffff;
+  --text: #232946;
+  --primary: #0d6efd;
+  --card: #ffffff;
+}
+
+body[data-theme='dark'] {
+  --bg: #0f1216;
+  --text: #e6e8ec;
+  --primary: #7aa2ff;
+  --card: #161a22;
+}
+
+body[data-theme='ocean'] {
+  --bg: #e6f7ff;
+  --text: #0c2d48;
+  --primary: #00a8e8;
+  --card: #ffffff;
+}
+
+body[data-theme='forest'] {
+  --bg: #f0fff4;
+  --text: #1b4332;
+  --primary: #2d6a4f;
+  --card: #ffffff;
+}
+
+body[data-theme='sand'] {
+  --bg: #fff8e1;
+  --text: #5d4037;
+  --primary: #ffb74d;
+  --card: #ffffff;
+}
+
+body[data-theme='neon'] {
+  --bg: #0b0f13;
+  --text: #e0eaff;
+  --primary: #00e5ff;
+  --card: #10151b;
+}
+
+body[data-theme='zen'] {
+  --bg: #fafafa;
+  --text: #333333;
+  --primary: #9ad1d4;
+  --card: #ffffff;
+}
+
+* {
+  font-family: var(--body-font) !important;
+}
+
+body {
+  margin: 0;
+  font-family: var(--body-font) !important;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+  letter-spacing: 0.3px;
+  font-weight: 400;
+  background: var(--bg);
+  color: var(--text);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--title-font) !important;
+  font-weight: 700;
+  letter-spacing: 0px;
+}
+
+.btn {
+  font-family: var(--title-font) !important;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.form-label {
+  font-family: var(--title-font) !important;
+  font-weight: 700;
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+  color: #2c3e50;
+}
+
+.form-control, .form-select {
+  font-family: var(--body-font) !important;
+  font-size: 1rem;
+  font-weight: 400;
+  border-radius: 0.5rem;
+}
+
+.form-control:focus, .form-select:focus {
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+}
+
+.card {
+  border-radius: 1rem;
+  background: var(--card);
+}
+
+.card-title {
+  font-family: var(--title-font) !important;
+  font-weight: 700;
+  letter-spacing: 0px;
+}
+
+.navbar-brand {
+  font-family: var(--title-font) !important;
+  font-weight: 700;
+  letter-spacing: 0px;
+  font-size: 1.5rem;
+}
+
+.progress {
+  border-radius: 1rem;
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.progress-bar {
+  border-radius: 1rem;
+}
+
+.badge {
+  font-family: var(--body-font) !important;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  padding: 0.5em 0.8em;
+}
+
+.list-group-item {
+  border-radius: 0.8rem;
+  margin-bottom: 0.5rem;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.task-list .list-group-item h5 {
+  font-family: var(--title-font) !important;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.task-list .text-muted {
+  color: #64748b !important;
+  font-weight: 300;
+}
+
+/* Styles pour le footer */
+.footer {
+  background: linear-gradient(90deg, #232946 60%, #16db93 100%);
+  color: #f4faff;
+  border-top: none;
+  padding: 2.5rem 0 1.2rem 0;
+  box-shadow: 0 -2px 16px rgba(22,219,147,0.08);
+  font-family: var(--body-font) !important;
+  letter-spacing: 0.3px;
+}
+
+.footer h5 {
+  font-family: var(--title-font) !important;
+  font-weight: 700;
+  font-size: 1.2rem;
+  letter-spacing: 0.5px;
+  color: #fff;
+  margin-bottom: 1rem;
+}
+
+.footer .list-unstyled li {
+  margin-bottom: 0.7rem;
+}
+
+.footer a {
+  color: #f4faff;
+  text-decoration: none;
+  transition: color 0.3s, text-shadow 0.3s;
+  font-weight: 400;
+}
+
+.footer a:hover {
+  color: #16db93 !important;
+  text-shadow: 0 2px 8px rgba(22,219,147,0.15);
+}
+
+.footer .bi {
+  font-size: 1.2rem;
+  vertical-align: middle;
+  margin-right: 0.4rem;
+}
+
+.footer .copyright {
+  margin-top: 2rem;
+  font-size: 1rem;
+  color: #b6c2d9;
+  letter-spacing: 0.3px;
+  font-weight: 300;
+}
+
+@media (max-width: 768px) {
+  .footer {
+    text-align: center;
+    padding: 2rem 0 1rem 0;
+  }
+  .footer .col-md-4 {
+    margin-bottom: 2rem;
+  }
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.list-group-item {
+  animation: fadeIn 0.3s ease-out;
+}
+

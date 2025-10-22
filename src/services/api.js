@@ -28,12 +28,9 @@ export const BACKEND_ORIGIN = (() => {
 // Intercepteur pour les requêtes
 api.interceptors.request.use(
   (config) => {
-    // Récupération robuste du token (selon la clé utilisée au login)
-    let token = localStorage.getItem('userToken');
-    if (!token) token = localStorage.getItem('token');
-    if (!token) {
-      try { token = JSON.parse(localStorage.getItem('userInfo') || '{}')?.token; } catch { /* noop */ }
-    }
+    // Récupération du token (session uniquement, non persistant)
+    let token = sessionStorage.getItem('userToken');
+    if (!token) token = sessionStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -51,9 +48,7 @@ api.interceptors.response.use(
       localStorage.removeItem('userToken');
       localStorage.removeItem('token');
       localStorage.removeItem('userInfo');
-      if (window.location.pathname !== '/login') {
-        window.location.href = '/login';
-      }
+      // Ne pas forcer de redirection immédiate ici pour éviter les rebonds; laisser les gardes de route décider.
     }
     return Promise.reject(error);
   }

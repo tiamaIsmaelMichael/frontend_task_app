@@ -18,7 +18,7 @@ const Dashboard = () => {
   const itemsPerPage = 8;
   const navigate = useNavigate();
 
-  const user = JSON.parse(localStorage.getItem("userInfo"));
+  const user = (() => { try { return JSON.parse(sessionStorage.getItem("userInfo")); } catch { return null; } })();
 
   const fetchTasks = useCallback(async () => {
     try {
@@ -29,18 +29,24 @@ const Dashboard = () => {
     } catch (err) {
       console.error("Erreur lors du chargement des tâches :", err);
       setError("Impossible de charger les tâches. Veuillez réessayer.");
-      if (err.response?.status === 401) {
-        handleLogout();
-      }
+      // Ne pas déconnecter immédiatement sur 401 ici; laisser l'intercepteur global gérer
+      // et éviter les allers-retours vers /login en cas d'erreurs transitoires.
+      // On peut éventuellement retenter une fois après un court délai.
+      try {
+        await new Promise(r => setTimeout(r, 600));
+        const res2 = await api.get("/tasks");
+        setTasks(res2.data);
+        setError(null);
+      } catch (_) { /* noop: l'intercepteur 401 redirigera si nécessaire */ }
     } finally {
       setLoading(false);
     }
   }, []);
 
 useEffect(() => {
-  let token = localStorage.getItem('userToken') || localStorage.getItem('token');
+  let token = sessionStorage.getItem('userToken') || sessionStorage.getItem('token');
   if (!token) {
-    try { token = JSON.parse(localStorage.getItem('userInfo') || '{}')?.token; } catch {}
+    try { token = JSON.parse(sessionStorage.getItem('userInfo') || '{}')?.token; } catch {}
   }
   if (!token) {
     navigate("/login");
@@ -52,11 +58,7 @@ useEffect(() => {
   // Repartir à la page 1 quand les filtres changent ou la liste varie
   useEffect(() => { setPage(1); }, [filter, section, tasks.length]);
 
-  const handleLogout = () => {
-    localStorage.removeItem("userToken");
-    localStorage.removeItem("userInfo");
-    navigate("/login");
-  };
+  // handleLogout supprimé (non utilisé)
 
   const handleSubmit = async (taskData) => {
     try {
@@ -132,9 +134,9 @@ useEffect(() => {
   const currentUserId = String(user?.id || user?._id || "");
   const assignedToMe = tasks.filter((t) => String(t.assignedTo || "") === currentUserId);
 
-  if (!user) {
-    return <div>Redirection vers la page de connexion...</div>;
-  }
+  // Ne pas bloquer l'affichage si userInfo est absent :
+  // le guard de route (App.js) se base sur le token, et l'useEffect ci-dessous
+  // redirigera vers /login si aucun token n'est présent.
 
   return (
     <Layout>

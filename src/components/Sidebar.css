@@ -81,7 +81,52 @@
   .sidebar { flex: 0 0 200px; width: 200px; }
 }
 
-/* On very small screens, hide the sidebar to prioritize content. */
+/* On very small screens, switch to off-canvas behavior. */
 @media (max-width: 576px) {
-  .sidebar { display: none; }
+  .sidebar {
+    position: fixed;
+    top: 56px; /* approximate header height */
+    left: -220px; /* hidden off-canvas by default */
+    height: calc(100vh - 56px);
+    width: 220px;
+    max-width: 80vw;
+    z-index: 1040; /* above content, below header if needed */
+    border-top-right-radius: 12px;
+    border-bottom-right-radius: 12px;
+    transition: left 0.25s ease-in-out;
+  }
+  .sidebar.open {
+    left: 0;
+  }
+  .sidebar .content {
+    padding-top: 16px;
+  }
+  .sidebar-backdrop {
+    position: fixed;
+    inset: 56px 0 0 0; /* below header */
+    background: rgba(0,0,0,0.35);
+    z-index: 1030;
+  }
+}
+
+/* Floating toggle button for mobile */
+.sidebar-toggle-btn {
+  position: fixed;
+  right: 16px;
+  bottom: 20px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: none;
+  background: #16db93;
+  color: #0b3b2e;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+  z-index: 1050;
+  display: none; /* only on small screens */
+}
+.sidebar-toggle-btn:active { transform: scale(0.98); }
+
+@media (max-width: 576px) {
+  .sidebar-toggle-btn { display: inline-flex; align-items: center; justify-content: center; }
+  .sidebar-toggle-btn.hidden { opacity: 0; pointer-events: none; transition: opacity 0.2s; }
 }

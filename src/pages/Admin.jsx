@@ -1,11 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import Layout from '../components/Layout';
-import { adminListUsers, adminDeleteUser, adminResetPassword, adminCreateProject, adminListProjects, adminDeleteProject, adminTeamStats, adminUpdateProjectMembers, adminListAllTasks, adminReviewProgress, adminAssignTask, listNotifications, markNotificationRead, deleteNotification, deleteAllNotifications, adminCreateProjectTask } from '../services/api';
+import { adminListUsers, adminDeleteUser, adminResetPassword, adminCreateProject, adminListProjects, adminDeleteProject, adminTeamStats, adminUpdateProjectMembers, adminListAllTasks, adminReviewProgress, adminAssignTask, listNotifications, markNotificationRead, deleteNotification, deleteAllNotifications, adminCreateProjectTask, BACKEND_ORIGIN } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 
 const Guard = ({ children }) => {
   const user = useMemo(() => {
-    try { return JSON.parse(localStorage.getItem('userInfo')); } catch { return null; }
+    try { return JSON.parse(sessionStorage.getItem('userInfo')); } catch { return null; }
   }, []);
   if (!user || user.role !== 'admin') {
     return <div className="container py-4">Accès refusé</div>;
@@ -484,11 +484,11 @@ const AdminPage = () => {
                       // 1. MAJ membres/capacité
                       await adminUpdateProjectMembers(editProject._id, { members: editProject.members, maxMembers: editProject.maxMembers });
                       // 2. MAJ nom/desc
-                      await fetch(`http://localhost:5000/api/projects/${editProject._id}`, {
+                      await fetch(`${BACKEND_ORIGIN}/api/projects/${editProject._id}`, {
                         method: 'PUT',
                         headers: {
                           'Content-Type': 'application/json',
-                          'Authorization': `Bearer ${localStorage.getItem('userToken')}`
+                          'Authorization': `Bearer ${sessionStorage.getItem('userToken')}`
                         },
                         body: JSON.stringify({ name: editProject.name, description: editProject.description })
                       });

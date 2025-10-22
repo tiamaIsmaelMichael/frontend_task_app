@@ -48,7 +48,7 @@ const TaskList = ({ tasks, onToggleComplete, onEdit, onDelete, currentUserId }) 
     setTimeout(() => setToast((t) => ({ ...t, show: false })), 2000);
   };
 
-  const userRole = (() => { try { return JSON.parse(localStorage.getItem('userInfo'))?.role || 'user'; } catch { return 'user'; } })();
+  const userRole = (() => { try { return JSON.parse(sessionStorage.getItem('userInfo'))?.role || 'user'; } catch { return 'user'; } })();
   const isAdminRole = userRole === 'admin';
 
   const onAccept = async (taskId) => {

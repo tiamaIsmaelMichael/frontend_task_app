@@ -1,10 +1,10 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { listNotifications, markNotificationRead, deleteNotification, deleteAllNotifications } from "../services/api";
 
 const Header = () => {
   const navigate = useNavigate();
-  const isAuthenticated = !!localStorage.getItem("userToken");
+  const [isAuthenticated, setIsAuthenticated] = useState(!!sessionStorage.getItem("userToken"));
   const [notifications, setNotifications] = useState([]);
   const [open, setOpen] = useState(false);
   const bellRef = useRef(null);
@@ -18,7 +18,7 @@ const Header = () => {
 
   const unreadCount = useMemo(() => notifications.filter(n => !n.read).length, [notifications]);
 
-  const loadNotifications = async () => {
+  const loadNotifications = useCallback(async () => {
     try {
       if (!isAuthenticated) return;
       const data = await listNotifications();
@@ -43,7 +43,7 @@ const Header = () => {
       setNotifications([]);
       prevUnreadIdsRef.current = new Set();
     }
-  };
+  }, [isAuthenticated]);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -51,7 +51,18 @@ const Header = () => {
       const t = setInterval(loadNotifications, 30000); // refresh toutes les 30s
       return () => clearInterval(t);
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, loadNotifications]);
+
+  // Suivre les changements d'auth dans la session (ex: login/logout)
+  useEffect(() => {
+    const onChange = () => setIsAuthenticated(!!sessionStorage.getItem('userToken'));
+    window.addEventListener('storage', onChange);
+    window.addEventListener('auth-changed', onChange);
+    return () => {
+      window.removeEventListener('storage', onChange);
+      window.removeEventListener('auth-changed', onChange);
+    };
+  }, []);
 
   // Fermer le dropdown si clic à l'extérieur
   useEffect(() => {
@@ -119,13 +130,14 @@ const Header = () => {
         </div>
       )}
 
-      <a
-        className="navbar-brand shadow-sm p-2 rounded"
+      <button
+        type="button"
+        className="navbar-brand shadow-sm p-2 rounded btn btn-link text-decoration-none"
         style={{ backgroundColor: "#fff", cursor: 'pointer' }}
         onClick={() => navigate('/')}
       >
         My To Do App
-      </a>
+      </button>
       {!isAuthenticated ? (
         <div className="ms-auto">
           <a href="/login" className="btn btn-outline-primary me-2">

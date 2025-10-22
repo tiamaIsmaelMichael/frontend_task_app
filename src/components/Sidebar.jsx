@@ -5,8 +5,9 @@ import { uploadAvatar, updateProfile, BACKEND_ORIGIN } from "../services/api";
 import { ThemeContext } from "../context/ThemeContext";
 import { listNotifications } from "../services/api";
 
-const Sidebar = () => {
+const Sidebar = ({ mobileOpen = false, onMobileClose }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -19,9 +20,24 @@ const Sidebar = () => {
   const navigate = useNavigate();
   const { theme, setTheme, themes } = useContext(ThemeContext);
 
+  // Detect small screens to alter behavior (no hover on mobile)
+  useEffect(() => {
+    const handleResize = () => {
+      try {
+        const m = window.matchMedia && window.matchMedia('(max-width: 576px)').matches;
+        setIsMobile(!!m);
+      } catch {
+        setIsMobile(false);
+      }
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   useEffect(() => {
     try {
-      const u = JSON.parse(localStorage.getItem("userInfo"));
+      const u = JSON.parse(sessionStorage.getItem("userInfo"));
       setUser(u || null);
       if (u) {
         setFirstName(u.firstName || "");
@@ -67,11 +83,12 @@ const Sidebar = () => {
     // lancer un tick immédiat à l'ouverture
     tick();
     return () => { cancelled = true; clearInterval(id); };
-  }, [user?.role]);
+  }, [user]);
 
   const handleLogout = () => {
-    localStorage.removeItem("userInfo");
-    localStorage.removeItem("userToken");
+    sessionStorage.removeItem("userInfo");
+    sessionStorage.removeItem("userToken");
+    sessionStorage.removeItem("token");
     navigate("/login");
   };
 
@@ -95,7 +112,7 @@ const Sidebar = () => {
     setError("");
     try {
       const { user: updated } = await updateProfile({ firstName, lastName, avatarUrl });
-      localStorage.setItem("userInfo", JSON.stringify(updated));
+      sessionStorage.setItem("userInfo", JSON.stringify(updated));
       setUser(updated);
       // Refresh preview if avatar changed
       const newPreview = updated.avatarUrl
@@ -111,11 +128,13 @@ const Sidebar = () => {
     }
   };
 
+  const effectiveOpen = (isOpen && !isMobile) || (isMobile && mobileOpen);
+
   return (
     <div
-      className={`sidebar${isOpen ? " open" : ""}`}
-      onMouseEnter={() => setIsOpen(true)}
-      onMouseLeave={() => setIsOpen(false)}
+      className={`sidebar${effectiveOpen ? " open" : ""}`}
+      onMouseEnter={!isMobile ? () => setIsOpen(true) : undefined}
+      onMouseLeave={!isMobile ? () => setIsOpen(false) : undefined}
     >
       <div className="content">
         {user ? (

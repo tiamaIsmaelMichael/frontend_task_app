@@ -1,6 +1,6 @@
 // src/pages/Login.jsx
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import api from "../services/api"; // axios configuré avec baseURL
 
 const Login = () => {
@@ -8,7 +8,6 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -18,11 +17,28 @@ const Login = () => {
     try {
       const res = await api.post("/users/login", { email, password });
 
-      // Stocker token + infos utilisateur
-      localStorage.setItem("userToken", res.data.token);
-      localStorage.setItem("userInfo", JSON.stringify(res.data.user));
+      // Stocker token + infos utilisateur en session (non persistant)
+      const { token, user } = res.data || {};
+      // Nettoyer d'éventuels anciens tokens persistants
+      try { localStorage.removeItem("userToken"); localStorage.removeItem("token"); localStorage.removeItem("userInfo"); } catch {}
+      if (token) {
+        sessionStorage.setItem("userToken", token);
+        sessionStorage.setItem("token", token);
+      }
+      if (user) {
+        const enriched = { ...user, token };
+        sessionStorage.setItem("userInfo", JSON.stringify(enriched));
+      }
 
-      navigate("/dashboard");
+      // Informer l'application que l'état d'auth a changé
+      try { window.dispatchEvent(new Event('auth-changed')); } catch {}
+
+      if (!token) {
+        setError("Réponse de connexion invalide: aucun token reçu.");
+        return;
+      }
+      // Forcer une navigation dure pour éviter tout état obsolète du routeur
+      window.location.replace("/dashboard");
     } catch (err) {
       // Gestion des erreurs API
       setError(

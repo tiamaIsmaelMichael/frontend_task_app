@@ -10,7 +10,7 @@ const TaskForm = ({ onSubmit, initialData, onCancel }) => {
   const [assignedTo, setAssignedTo] = useState("");
   const [users, setUsers] = useState([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
-  const currentUserId = (() => { try { return JSON.parse(localStorage.getItem('userInfo'))?.id || JSON.parse(localStorage.getItem('userInfo'))?._id || null; } catch { return null; } })();
+  const currentUserId = (() => { try { return JSON.parse(sessionStorage.getItem('userInfo'))?.id || JSON.parse(sessionStorage.getItem('userInfo'))?._id || null; } catch { return null; } })();
 
   const resetForm = () => {
     setTitle("");
@@ -51,7 +51,7 @@ const TaskForm = ({ onSubmit, initialData, onCancel }) => {
       }
     };
     load();
-  }, [visibility]);
+  }, [visibility, currentUserId]);
 
   const handleSubmit = (e) => {
     e.preventDefault();

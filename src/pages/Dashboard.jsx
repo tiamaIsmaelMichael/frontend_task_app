@@ -1,5 +1,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { PlusCircle } from 'react-bootstrap-icons';
+import { Modal, Button } from 'react-bootstrap';
 import api from "../services/api";
 import Layout from "../components/Layout";
 import TaskForm from "../components/TaskForm";
@@ -13,6 +15,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
   // Pagination (pour plus de confort visuel)
   const [page, setPage] = useState(1);
   const itemsPerPage = 8;
@@ -69,6 +72,7 @@ useEffect(() => {
         setShowEditModal(false);
       } else {
         await api.post("/tasks", taskData);
+        setShowAddModal(false);
       }
       fetchTasks();
     } catch (err) {
@@ -167,21 +171,15 @@ useEffect(() => {
           </div>
         )}
 
-        {/* Formulaire d'ajout/modification */}
-        <div
-          className="card mb-3 shadow-sm"
-          style={{ borderRadius: "0.8rem", border: "none" }}
-        >
-          <div className="card-body p-3">
-            <h5 className="card-title mb-3" style={{ color: "#0d6efd" }}>
-              Ajouter une tâche
-            </h5>
-            <TaskForm
-              onSubmit={handleSubmit}
-              initialData={null}
-              onCancel={() => {}}
-            />
-          </div>
+        {/* Bouton pour ajouter une tâche */}
+        <div className="d-flex justify-content-end mb-3">
+          <button
+            className="btn btn-primary"
+            onClick={() => setShowAddModal(true)}
+          >
+            <PlusCircle className="me-2" />
+            Ajouter une tâche
+          </button>
         </div>
 
         {/* Sections & Filtres (compacts) */}
@@ -323,25 +321,40 @@ useEffect(() => {
           </>
         )}
       </div>
-      {showEditModal && editingTask && (
-        <div className="modal" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div className="modal-dialog modal-lg">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">Modifier la tâche</h5>
-                <button type="button" className="btn-close" onClick={() => { setShowEditModal(false); setEditingTask(null); }}></button>
-              </div>
-              <div className="modal-body">
-                <TaskForm
-                  onSubmit={handleSubmit}
-                  initialData={editingTask}
-                  onCancel={() => { setShowEditModal(false); setEditingTask(null); }}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      
+      {/* Modal d'édition de tâche */}
+      <Modal show={showEditModal} onHide={() => { setShowEditModal(false); setEditingTask(null); }} size="lg">
+        <Modal.Header closeButton>
+          <Modal.Title>Modifier la tâche</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <TaskForm
+            onSubmit={(data) => {
+              handleSubmit(data);
+              setShowEditModal(false);
+            }}
+            initialData={editingTask}
+            onCancel={() => { setShowEditModal(false); setEditingTask(null); }}
+          />
+        </Modal.Body>
+      </Modal>
+
+      {/* Modal d'ajout de tâche */}
+      <Modal show={showAddModal} onHide={() => setShowAddModal(false)} size="lg">
+        <Modal.Header closeButton>
+          <Modal.Title>Ajouter une tâche</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <TaskForm
+            onSubmit={(data) => {
+              handleSubmit(data);
+              setShowAddModal(false);
+            }}
+            initialData={null}
+            onCancel={() => setShowAddModal(false)}
+          />
+        </Modal.Body>
+      </Modal>
     </Layout>
   );
 };

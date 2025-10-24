@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import Layout from '../components/Layout';
 import { adminListUsers, adminDeleteUser, adminResetPassword, adminCreateProject, adminListProjects, adminDeleteProject, adminTeamStats, adminUpdateProjectMembers, adminListAllTasks, adminReviewProgress, adminAssignTask, listNotifications, markNotificationRead, deleteNotification, deleteAllNotifications, adminCreateProjectTask, BACKEND_ORIGIN } from '../services/api';
 import { useNavigate } from 'react-router-dom';
+import { Modal, Button } from 'react-bootstrap';
 
 const Guard = ({ children }) => {
   const user = useMemo(() => {
@@ -41,6 +42,8 @@ const AdminPage = () => {
   const [taskMembers, setTaskMembers] = useState([]);
   const [taskFiles, setTaskFiles] = useState([]);
   const [creatingTask, setCreatingTask] = useState(false);
+  const [showProjectModal, setShowProjectModal] = useState(false);
+  const [showTaskModal, setShowTaskModal] = useState(false);
 
   // Mapping id -> "Prénom Nom"
   const userNameById = useMemo(() => {
@@ -123,9 +126,11 @@ const AdminPage = () => {
       setMaxMembers(10);
       setProjStart('');
       setProjEnd('');
+      setShowProjectModal(false);
       await loadAll();
+      showToast('success', 'Projet créé avec succès');
     } catch (e) {
-      setError(e?.response?.data?.message || 'Erreur création projet');
+      showToast('danger', e?.response?.data?.message || 'Erreur lors de la création du projet');
     }
   };
 
@@ -221,97 +226,89 @@ const AdminPage = () => {
           </div>
           <div className="col-md-6">
             <div className="card p-3 mb-3">
-              <h5 className="card-title mb-3">Créer un projet</h5>
-              <form onSubmit={onCreateProject}>
-                <div className="mb-2">
-                  <label className="form-label">Nom</label>
-                  <input className="form-control" value={projName} onChange={(e) => setProjName(e.target.value)} required />
-                </div>
-                <div className="mb-2">
-                  <label className="form-label">Description</label>
-                  <textarea className="form-control" value={projDesc} onChange={(e) => setProjDesc(e.target.value)} />
-                </div>
-                <div className="row g-2">
-                  <div className="col">
-                    <label className="form-label">Début du projet</label>
-                    <input type="date" className="form-control" value={projStart} onChange={(e) => setProjStart(e.target.value)} />
-                  </div>
-                  <div className="col">
-                    <label className="form-label">Fin du projet</label>
-                    <input type="date" className="form-control" value={projEnd} onChange={(e) => setProjEnd(e.target.value)} />
-                  </div>
-                </div>
-                <div className="mb-2">
-                  <label className="form-label">Capacité (max membres)</label>
-                  <input type="number" min={1} className="form-control" value={maxMembers} onChange={(e) => setMaxMembers(parseInt(e.target.value || '1', 10))} />
-                </div>
-                <div className="mb-2">
-                  <label className="form-label">Membres</label>
-                  <select multiple className="form-select" value={selectedMembers} onChange={(e) => setSelectedMembers(Array.from(e.target.selectedOptions, o => o.value))}>
-                    {users.map(u => (
-                      <option key={u._id} value={u._id}>{u.firstName} {u.lastName} ({u.email})</option>
+              <div className="d-flex justify-content-between align-items-center mb-3">
+                <h5 className="card-title mb-0">Gestion des projets</h5>
+                <button 
+                  className="btn btn-primary" 
+                  onClick={() => setShowProjectModal(true)}
+                >
+                  Créer un projet
+                </button>
+              </div>
+              <div className="table-responsive">
+                <table className="table table-hover">
+                  <thead>
+                    <tr>
+                      <th>Nom</th>
+                      <th>Membres</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {projects.map(project => (
+                      <tr key={project._id}>
+                        <td>{project.name}</td>
+                        <td>{project.members?.length || 0} membre(s)</td>
+                        <td>
+                          <button 
+                            className="btn btn-sm btn-outline-danger" 
+                            onClick={() => onDeleteProject(project._id)}
+                          >
+                            Supprimer
+                          </button>
+                        </td>
+                      </tr>
                     ))}
-                  </select>
-                  <div className="form-text">Sélectionnez jusqu'à {maxMembers} membres.</div>
-                </div>
-                <button className="btn btn-primary" type="submit">Créer</button>
-              </form>
+                  </tbody>
+                </table>
+              </div>
             </div>
             {/* Créer une tâche projet (avec pièces jointes) */}
             <div className="card p-3">
-              <h5 className="card-title mb-3">Créer une tâche de projet</h5>
-              <form onSubmit={onCreateProjectTask}>
-                <div className="mb-2">
-                  <label className="form-label">Projet</label>
-                  <select className="form-select" value={taskProject} onChange={(e) => { setTaskProject(e.target.value); setTaskMembers([]); }} required>
-                    <option value="">Choisir un projet</option>
-                    {projects.map(p => (
-                      <option key={p._id} value={p._id}>{p.name}</option>
+              <div className="d-flex justify-content-between align-items-center mb-3">
+                <h5 className="card-title mb-0">Tâches de projet</h5>
+                <button 
+                  className="btn btn-primary" 
+                  onClick={() => setShowTaskModal(true)}
+                >
+                  Créer une tâche
+                </button>
+              </div>
+              <div className="table-responsive">
+                <table className="table table-hover">
+                  <thead>
+                    <tr>
+                      <th>Projet</th>
+                      <th>Tâche</th>
+                      <th>Priorité</th>
+                      <th>Statut</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {allTasks.map(task => (
+                      <tr key={task._id}>
+                        <td>{projects.find(p => p._id === task.projectId)?.name || 'N/A'}</td>
+                        <td>{task.title}</td>
+                        <td>
+                          <span className={`badge ${
+                            task.priority === 'high' ? 'bg-danger' : 
+                            task.priority === 'medium' ? 'bg-warning' : 'bg-secondary'
+                          }`}>
+                            {task.priority === 'high' ? 'Haute' : task.priority === 'medium' ? 'Moyenne' : 'Basse'}
+                          </span>
+                        </td>
+                        <td>
+                          <span className={`badge ${
+                            task.status === 'completed' ? 'bg-success' : 'bg-info'
+                          }`}>
+                            {task.status === 'completed' ? 'Terminée' : 'En cours'}
+                          </span>
+                        </td>
+                      </tr>
                     ))}
-                  </select>
-                </div>
-                <div className="mb-2">
-                  <label className="form-label">Titre</label>
-                  <input className="form-control" value={taskTitle} onChange={(e) => setTaskTitle(e.target.value)} required />
-                </div>
-                <div className="mb-2">
-                  <label className="form-label">Description</label>
-                  <textarea className="form-control" rows={3} value={taskDesc} onChange={(e) => setTaskDesc(e.target.value)} placeholder="Détaillez la tâche, livrables, etc." />
-                </div>
-                <div className="row g-2 mb-2">
-                  <div className="col">
-                    <label className="form-label">Échéance</label>
-                    <input type="date" className="form-control" value={taskDue} onChange={(e) => setTaskDue(e.target.value)} />
-                  </div>
-                  <div className="col">
-                    <label className="form-label">Priorité</label>
-                    <select className="form-select" value={taskPriority} onChange={(e) => setTaskPriority(e.target.value)}>
-                      <option value="low">Basse</option>
-                      <option value="medium">Moyenne</option>
-                      <option value="high">Haute</option>
-                    </select>
-                  </div>
-                </div>
-                <div className="mb-2">
-                  <label className="form-label">Assigner à</label>
-                  <select multiple className="form-select" value={taskMembers} onChange={(e) => setTaskMembers(Array.from(e.target.selectedOptions, o => o.value))} disabled={!taskProject}>
-                    {(projects.find(p => String(p._id) === String(taskProject))?.members || [])
-                      .map(id => ({ id: String(id), name: userNameById.get(String(id)) || String(id) }))
-                      .map(opt => (
-                        <option key={opt.id} value={opt.id}>{opt.name}</option>
-                      ))}
-                  </select>
-                  <div className="form-text">Vous pouvez sélectionner plusieurs membres du projet.</div>
-                </div>
-                <div className="mb-3">
-                  <label className="form-label">Pièces jointes (brief, specs) — max 5, 5Mo chacune</label>
-                  <input className="form-control" type="file" multiple onChange={(e) => setTaskFiles(e.target.files)} />
-                </div>
-                <div className="d-flex gap-2">
-                  <button className="btn btn-success" type="submit" disabled={creatingTask}>{creatingTask ? 'Création...' : 'Créer la tâche'}</button>
-                  <button className="btn btn-secondary" type="button" onClick={resetTaskForm} disabled={creatingTask}>Réinitialiser</button>
-                </div>
-              </form>
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </div>
@@ -543,6 +540,251 @@ const AdminPage = () => {
           </div>
         )}
       </div>
+
+      {/* Modal de création de projet */}
+      <Modal show={showProjectModal} onHide={() => setShowProjectModal(false)} size="lg">
+        <Modal.Header closeButton>
+          <Modal.Title>Créer un nouveau projet</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <form onSubmit={onCreateProject}>
+            <div className="mb-3">
+              <label className="form-label">Nom du projet</label>
+              <input 
+                className="form-control" 
+                value={projName} 
+                onChange={(e) => setProjName(e.target.value)} 
+                placeholder="Nom du projet"
+                required 
+              />
+            </div>
+            <div className="mb-3">
+              <label className="form-label">Description</label>
+              <textarea 
+                className="form-control" 
+                value={projDesc} 
+                onChange={(e) => setProjDesc(e.target.value)}
+                placeholder="Description du projet"
+                rows={3}
+              />
+            </div>
+            <div className="row g-3 mb-3">
+              <div className="col-md-6">
+                <label className="form-label">Date de début</label>
+                <input 
+                  type="date" 
+                  className="form-control" 
+                  value={projStart} 
+                  onChange={(e) => setProjStart(e.target.value)} 
+                />
+              </div>
+              <div className="col-md-6">
+                <label className="form-label">Date de fin</label>
+                <input 
+                  type="date" 
+                  className="form-control" 
+                  value={projEnd} 
+                  onChange={(e) => setProjEnd(e.target.value)} 
+                />
+              </div>
+            </div>
+            <div className="mb-3">
+              <label className="form-label">Nombre maximum de membres</label>
+              <input 
+                type="number" 
+                min={1} 
+                className="form-control" 
+                value={maxMembers} 
+                onChange={(e) => setMaxMembers(parseInt(e.target.value || '1', 10))} 
+              />
+            </div>
+            <div className="mb-3">
+              <label className="form-label">Membres du projet</label>
+              <select 
+                multiple 
+                className="form-select" 
+                value={selectedMembers} 
+                onChange={(e) => setSelectedMembers(Array.from(e.target.selectedOptions, o => o.value))}
+                size={Math.min(users.length, 5)}
+              >
+                {users.map(u => (
+                  <option key={u._id} value={u._id}>
+                    {u.firstName} {u.lastName} ({u.email})
+                  </option>
+                ))}
+              </select>
+              <div className="form-text">
+                {selectedMembers.length} membre(s) sélectionné(s) sur {maxMembers} maximum
+              </div>
+            </div>
+            <div className="d-flex justify-content-end gap-2">
+              <button 
+                type="button" 
+                className="btn btn-outline-secondary" 
+                onClick={() => setShowProjectModal(false)}
+              >
+                Annuler
+              </button>
+              <button 
+                type="submit" 
+                className="btn btn-primary"
+                disabled={!projName.trim()}
+              >
+                Créer le projet
+              </button>
+            </div>
+          </form>
+        </Modal.Body>
+      </Modal>
+
+      {/* Modal de création de tâche */}
+      <Modal show={showTaskModal} onHide={() => setShowTaskModal(false)} size="lg">
+        <Modal.Header closeButton>
+          <Modal.Title>Créer une nouvelle tâche</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <form onSubmit={onCreateProjectTask}>
+            <div className="mb-3">
+              <label className="form-label">Projet</label>
+              <select 
+                className="form-select" 
+                value={taskProject} 
+                onChange={(e) => { 
+                  setTaskProject(e.target.value); 
+                  setTaskMembers([]); 
+                }} 
+                required
+              >
+                <option value="">Sélectionnez un projet</option>
+                {projects.map(p => (
+                  <option key={p._id} value={p._id}>
+                    {p.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="mb-3">
+              <label className="form-label">Titre de la tâche</label>
+              <input 
+                className="form-control" 
+                value={taskTitle} 
+                onChange={(e) => setTaskTitle(e.target.value)} 
+                placeholder="Titre de la tâche"
+                required 
+              />
+            </div>
+            <div className="mb-3">
+              <label className="form-label">Description</label>
+              <textarea 
+                className="form-control" 
+                rows={3} 
+                value={taskDesc} 
+                onChange={(e) => setTaskDesc(e.target.value)} 
+                placeholder="Détaillez la tâche, les livrables attendus, etc." 
+              />
+            </div>
+            <div className="row g-3 mb-3">
+              <div className="col-md-6">
+                <label className="form-label">Échéance</label>
+                <input 
+                  type="date" 
+                  className="form-control" 
+                  value={taskDue} 
+                  onChange={(e) => setTaskDue(e.target.value)} 
+                />
+              </div>
+              <div className="col-md-6">
+                <label className="form-label">Priorité</label>
+                <select 
+                  className="form-select" 
+                  value={taskPriority} 
+                  onChange={(e) => setTaskPriority(e.target.value)}
+                >
+                  <option value="low">Basse</option>
+                  <option value="medium">Moyenne</option>
+                  <option value="high">Haute</option>
+                </select>
+              </div>
+            </div>
+            <div className="mb-3">
+              <label className="form-label">Assigner à</label>
+              <select 
+                multiple 
+                className="form-select" 
+                value={taskMembers} 
+                onChange={(e) => setTaskMembers(Array.from(e.target.selectedOptions, o => o.value))} 
+                disabled={!taskProject}
+                size={Math.min(users.length, 5)}
+              >
+                {taskProject ? (
+                  (projects.find(p => String(p._id) === String(taskProject))?.members || [])
+                    .map(id => ({
+                      id: String(id), 
+                      name: userNameById.get(String(id)) || String(id)
+                    }))
+                    .map(opt => (
+                      <option key={opt.id} value={opt.id}>
+                        {opt.name}
+                      </option>
+                    ))
+                ) : (
+                  <option disabled>Sélectionnez d'abord un projet</option>
+                )}
+              </select>
+              {taskProject && (
+                <div className="form-text">
+                  {taskMembers.length} membre(s) sélectionné(s)
+                </div>
+              )}
+            </div>
+            <div className="mb-3">
+              <label className="form-label">Pièces jointes (optionnel)</label>
+              <input 
+                type="file" 
+                className="form-control" 
+                multiple 
+                onChange={(e) => setTaskFiles(e.target.files)}
+              />
+              <div className="form-text">
+                {taskFiles.length > 0 
+                  ? `${taskFiles.length} fichier(s) sélectionné(s)` 
+                  : 'Aucun fichier sélectionné'}
+              </div>
+            </div>
+            <div className="d-flex justify-content-end gap-2">
+              <button 
+                type="button" 
+                className="btn btn-outline-secondary" 
+                onClick={() => {
+                  setShowTaskModal(false);
+                  resetTaskForm();
+                }}
+              >
+                Annuler
+              </button>
+              <button 
+                type="submit" 
+                className="btn btn-primary"
+                disabled={!taskTitle.trim() || !taskProject}
+              >
+                {creatingTask ? 'Création en cours...' : 'Créer la tâche'}
+              </button>
+            </div>
+          </form>
+        </Modal.Body>
+      </Modal>
+
+      {/* Toast de notification */}
+      {toast.show && (
+        <div 
+          className={`toast show position-fixed bottom-0 end-0 m-3 ${toast.type === 'success' ? 'bg-success' : 'bg-danger'} text-white`}
+          style={{ zIndex: 1100 }}
+        >
+          <div className="toast-body">
+            {toast.message}
+          </div>
+        </div>
+      )}
     </Layout>
   );
 };
